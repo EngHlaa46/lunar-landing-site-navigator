@@ -21,7 +21,7 @@ A static web app (GitHub Pages, no server) that shows when the Sun and Earth are
 | malapert_massif | Malapert massif | -86.00 | 2.90 | Team pick |
 | haworth_rim | Haworth rim | -86.38 | -2.10 | Team pick |
 
-Coordinates are placeholders until the Terrain owner finalises them; IDs and names never change. More sites (group "CLPS target" or "Other mission", e.g. IM-1, IM-2) are added only by the lead after checking official sources. New IDs are the lowercase snake_case of the name. Map crater labels (USGS Gazetteer): Shackleton, de Gerlache, Haworth.
+The lat/lon in this table are OLD placeholders: never copy them. Final coordinates live only in docs/data/sites.json. IDs and names never change. More sites (group "CLPS target" or "Other mission", e.g. IM-1, IM-2) are added only by the lead after checking official sources. New IDs are the lowercase snake_case of the name. Map crater labels (USGS Gazetteer): Shackleton, de Gerlache, Haworth.
 
 ## Data contract (all files in docs/data/)
 - sites.json: {"region", "basemap": {"image", "psr_image", "extent_m": [xmin, xmax, ymin, ymax], "credit"}, "sites": [{"id", "name", "lat", "lon", "elevation_m", "group", "horizon": "horizon_<id>.json"}]}
