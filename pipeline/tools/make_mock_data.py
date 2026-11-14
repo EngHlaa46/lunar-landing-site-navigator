@@ -8,10 +8,16 @@ Every file with a "source" field says MOCK. Do not cite these numbers.
 Site IDs, names and placeholder coordinates come from the fixed table in
 CLAUDE.md. Never rename or add sites here.
 
+By default an existing file is only overwritten if its "source" contains
+MOCK, so real data is never replaced. sites.json has no "source" field, so it
+is skipped whenever it already exists. --force overwrites everything.
+
 Usage (from the repo root):
-    python pipeline/tools/make_mock_data.py
+    python pipeline/tools/make_mock_data.py           # safe: skips real files
+    python pipeline/tools/make_mock_data.py --force   # DANGER: overwrites all
 """
 
+import argparse
 import json
 import math
 import random
@@ -143,14 +149,57 @@ def make_horizon_grid():
     return {"source": "MOCK synthetic horizon grid", "spacing_km": spacing_km, "points": points}
 
 
+def skip_reason(path):
+    """Why an existing file must NOT be overwritten, or None if it is safe to write.
+
+    Safe = the file does not exist yet, or its "source" contains MOCK.
+    sites.json has no "source" field, so it is never overwritten once it exists.
+    """
+    if not path.exists():
+        return None
+    if path.name == "sites.json":
+        return "exists (sites.json has no source field; it may hold real coordinates)"
+    try:
+        source = json.loads(path.read_text(encoding="utf-8")).get("source", "")
+    except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
+        return "exists and is not readable JSON with a source field"
+    if isinstance(source, str) and "MOCK" in source:
+        return None
+    return f"real data (source = {source!r})"
+
+
 def main():
+    ap = argparse.ArgumentParser(description="Generate MOCK data files in docs/data/.")
+    ap.add_argument("--force", action="store_true",
+                    help="overwrite EVERY file, including real data (dangerous)")
+    args = ap.parse_args()
+
+    if args.force:
+        print("!" * 72)
+        print("!! WARNING: --force overwrites ALL files in docs/data/ with MOCK data,")
+        print("!! including real coordinates and real horizons. Recover them with")
+        print("!! `git restore docs/data` if this was a mistake.")
+        print("!" * 72)
+
+    files = [
+        ("sites.json", make_sites),
+        ("ephemeris.json", make_ephemeris),
+        *[(f"horizon_{s['id']}.json", lambda sid=s["id"]: make_site_horizon(sid)) for s in SITES],
+        ("horizon_grid.json", make_horizon_grid),
+    ]
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    write_json(DATA_DIR / "sites.json", make_sites())
-    write_json(DATA_DIR / "ephemeris.json", make_ephemeris())
-    for s in SITES:
-        write_json(DATA_DIR / f"horizon_{s['id']}.json", make_site_horizon(s["id"]))
-    write_json(DATA_DIR / "horizon_grid.json", make_horizon_grid())
-    print("Done. All files above are MOCK data.")
+    written, skipped = [], []
+    for name, make in files:
+        path = DATA_DIR / name
+        reason = None if args.force else skip_reason(path)
+        if reason:
+            print(f"skipped {path.relative_to(REPO_ROOT)}: {reason}")
+            skipped.append(name)
+        else:
+            write_json(path, make())
+            written.append(name)
+    print(f"\nWritten (MOCK): {', '.join(written) or 'none'}")
+    print(f"Skipped:        {', '.join(skipped) or 'none'}")
 
 
 if __name__ == "__main__":
