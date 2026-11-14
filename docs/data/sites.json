@@ -5,36 +5,36 @@
   {
    "id": "shackleton_rim",
    "name": "Shackleton rim",
-   "lat": -89.79,
-   "lon": -140.0,
-   "elevation_m": null,
+   "lat": -89.77967,
+   "lon": -156.35098,
+   "elevation_m": 1736.8,
    "group": "Team pick",
    "horizon": "horizon_shackleton_rim.json"
   },
   {
    "id": "de_gerlache_rim",
    "name": "de Gerlache rim",
-   "lat": -88.7,
-   "lon": -68.0,
-   "elevation_m": null,
+   "lat": -88.66481,
+   "lon": -68.37728,
+   "elevation_m": 1813.8,
    "group": "Team pick",
    "horizon": "horizon_de_gerlache_rim.json"
   },
   {
    "id": "malapert_massif",
    "name": "Malapert massif",
-   "lat": -86.0,
-   "lon": 2.9,
-   "elevation_m": null,
+   "lat": -85.98451,
+   "lon": 2.23948,
+   "elevation_m": 5157.6,
    "group": "Team pick",
    "horizon": "horizon_malapert_massif.json"
   },
   {
    "id": "haworth_rim",
    "name": "Haworth rim",
-   "lat": -86.38,
-   "lon": -2.1,
-   "elevation_m": null,
+   "lat": -86.408,
+   "lon": -1.4936,
+   "elevation_m": 2174.6,
    "group": "Team pick",
    "horizon": "horizon_haworth_rim.json"
   }
