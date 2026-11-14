@@ -32,9 +32,9 @@
   {
    "id": "haworth_rim",
    "name": "Haworth rim",
-   "lat": -86.408,
-   "lon": -1.4936,
-   "elevation_m": 2174.6,
+   "lat": -86.54001,
+   "lon": -1.37588,
+   "elevation_m": 1893.4,
    "group": "Team pick",
    "horizon": "horizon_haworth_rim.json"
   }

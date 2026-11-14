@@ -2,8 +2,9 @@
 """Step 2: pick final site coordinates from the LOLA DEM.
 
 For each site in docs/data/sites.json, look at every DEM pixel within 1.5 km
-(or the per-site override below) of the placeholder position, keep the ones with slope under 5 degrees, and
-choose the highest of those. Prints old vs new lat/lon, slope and elevation.
+(or the per-site override below) of its start point (START_POINTS below), keep the ones with slope under 5 degrees, and
+choose the highest of those (or the nearest, per PICK_RULE_OVERRIDES). Prints
+the current, start and new lat/lon, slope and elevation.
 
 By default this only REPORTS. With --write it updates lat, lon and
 elevation_m in sites.json (IDs, names and everything else stay unchanged).
@@ -46,13 +47,37 @@ SEARCH_RADIUS_OVERRIDES_M = {
     "shackleton_rim": 2000.0,
 }
 
+# Search start points, kept as constants here. They were copied by hand from the
+# placeholder table in CLAUDE.md (Sites section); nothing reads CLAUDE.md at run
+# time. Fixed start points make re-runs reproduce the same picks instead of
+# searching again from the coordinates already in sites.json (which would drift).
+START_POINTS = {
+    "shackleton_rim": (-89.79, -140.00),
+    "de_gerlache_rim": (-88.70, -68.00),
+    "malapert_massif": (-86.00, 2.90),
+    # haworth_rim: the placeholder (-86.38, -2.10) gave a pick 32.1 km from Haworth's
+    # corrected IAU centre (lat -87.45, lon -5.17, D 51.4 km), about 4.3 km outside the
+    # rim. Start on the rim instead: along the line from that centre through the old
+    # pick, the DEM's inner wall is steepest at 25.0 km and its slope first drops below
+    # 10 deg at 27.8 km (the top of the wall). This point is that wall top.
+    "haworth_rim": (-86.54868, -1.85844),
+}
+
+# How to choose among the flat pixels: "highest" (default) or "nearest" to the start.
+PICK_RULE_OVERRIDES = {
+    # haworth_rim: the highest flat pixel is not stable: at 1.0, 1.5 and 2.0 km it is
+    # three different points, each further out and up the Malapert massif slope. So use
+    # the flat pixel nearest to the rim point instead.
+    "haworth_rim": "nearest",
+}
+
 
 def scale_factor(lat_deg):
     """Polar stereographic scale k (true at the pole): map distance = k * ground distance."""
     return 2.0 / (1.0 + math.sin(math.radians(abs(lat_deg))))
 
 
-def pick(src, to_xy, to_lonlat, site, radius_m):
+def pick(src, to_xy, to_lonlat, site, radius_m, rule="highest"):
     px = src.res[0]  # 80 m per pixel in map units
     x0, y0 = to_xy.transform(site["lon"], site["lat"])
     k = scale_factor(site["lat"])
@@ -90,7 +115,10 @@ def pick(src, to_xy, to_lonlat, site, radius_m):
         result["new"] = None
         return result
 
-    best = np.unravel_index(np.argmax(np.where(ok, z, -np.inf)), z.shape)
+    if rule == "nearest":
+        best = np.unravel_index(np.argmin(np.where(ok, dist, np.inf)), z.shape)
+    else:
+        best = np.unravel_index(np.argmax(np.where(ok, z, -np.inf)), z.shape)
     lon, lat = to_lonlat.transform(xs[best], ys[best])
     result["new"] = (lat, lon, z[best], slope[best], dist[best])
     return result
@@ -106,20 +134,23 @@ def main():
         to_xy = Transformer.from_crs(LONLAT_MOON, src.crs, always_xy=True)
         to_lonlat = Transformer.from_crs(src.crs, LONLAT_MOON, always_xy=True)
         print(f"Search: within {SEARCH_RADIUS_M / 1000:g} km (overrides: {SEARCH_RADIUS_OVERRIDES_M}),"
-              f" slope < {MAX_SLOPE_DEG:g} deg, highest wins")
+              f" slope < {MAX_SLOPE_DEG:g} deg; rule overrides: {PICK_RULE_OVERRIDES}")
         print(f"DEM: {DEM_PATH.name}, heights = LDEM height (m)\n")
         updates = {}
         for s in data["sites"]:
             radius = SEARCH_RADIUS_OVERRIDES_M.get(s["id"], SEARCH_RADIUS_M)
-            r = pick(src, to_xy, to_lonlat, s, radius)
+            rule = PICK_RULE_OVERRIDES.get(s["id"], "highest")
+            start = START_POINTS.get(s["id"], (s["lat"], s["lon"]))
+            r = pick(src, to_xy, to_lonlat, {"lat": start[0], "lon": start[1]}, radius, rule)
             olat, olon, oz, oslope = r["old"]
-            print(f"{s['id']}  ({s['name']})  search radius {radius / 1000:g} km")
-            print(f"  old  lat {olat:10.5f}  lon {olon:10.5f}  elev {oz:8.1f} m  slope {oslope:5.2f} deg")
+            print(f"{s['id']}  ({s['name']})  search radius {radius / 1000:g} km, rule: {rule} flat pixel")
+            print(f"  now   lat {s['lat']:10.5f}  lon {s['lon']:10.5f}  elev_m {s['elevation_m']}  (current sites.json)")
+            print(f"  start lat {olat:10.5f}  lon {olon:10.5f}  elev {oz:8.1f} m  slope {oslope:5.2f} deg")
             if r["new"] is None:
                 print(f"  NO pixel with slope < {MAX_SLOPE_DEG:g} deg in {r['n_circle']} pixels: keeping placeholder\n")
                 continue
             nlat, nlon, nz, nslope, nd = r["new"]
-            print(f"  new  lat {nlat:10.5f}  lon {nlon:10.5f}  elev {nz:8.1f} m  slope {nslope:5.2f} deg"
+            print(f"  new   lat {nlat:10.5f}  lon {nlon:10.5f}  elev {nz:8.1f} m  slope {nslope:5.2f} deg"
                   f"  moved {nd / 1000:.2f} km")
             print(f"  {r['n_ok']} of {r['n_circle']} pixels in the circle are under {MAX_SLOPE_DEG:g} deg\n")
             updates[s["id"]] = (round(nlat, 5), round(nlon, 5), round(float(nz), 1))
