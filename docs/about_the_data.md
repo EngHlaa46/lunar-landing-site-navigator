@@ -11,7 +11,7 @@ Parallax. Earth is close enough that a lander on the surface sees it about 0.26�
 Terrain. Terrain horizons come from the LRO LOLA south-polar elevation model (LDEM_80S_80MPP_ADJ, 80 m per pixel, NASA PGDA; Barker et al. 2023).
 - For each site, we trace 360 directions out to the edge of the model, from a point 2 m above the ground.
 - We correct for the Moon's curvature and keep the highest terrain angle in each direction.
-- Sites are flat spots (slope under 5째 at 80 m resolution) on the named crater rim or massif.
+- Sites are flat spots (slope under 5째 at 80 m resolution) near each named feature. The Shackleton and Haworth points were checked against the crater rim.
 
 Validation.
 - Ephemeris: for the four sites, we queried Horizons directly for azimuth and elevation (quantity 4) and compared them with our computed values. The largest differences were 0.0004째 in elevation and 0.0055째 in azimuth. The fetch script also checks that the data stays in physical ranges.
@@ -22,5 +22,5 @@ Limits. This is a screening tool, not a mission-grade model.
 - "Earth visible" means Earth's centre is above the skyline. That's a geometric line of sight, not a link budget. Earth's disc is about 0.95째 in radius, so its edge can show when the centre is hidden.
 - Times are hourly, so window start and end times are accurate to about one hour.
 - Slopes are measured at 80 m resolution and don't guarantee a safe landing spot.
-- Terrain beyond the elevation model's edge (about 304 km from the pole) isn't included.
-- Custom locations use a coarser terrain grid.
+- Terrain beyond the edge of the elevation model, which covers roughly 80째S to the pole, isn't included.
+- Custom locations use a coarse terrain grid, which is currently placeholder data and is labelled MOCK in the app.
