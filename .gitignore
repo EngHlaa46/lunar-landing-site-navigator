@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor folders
+.vscode/
+.idea/
+*.swp
+*~
+
+# Elevation rasters: NEVER commit. The LOLA DEM is 181 MB and GitHub
+# rejects files over 100 MB. Download them locally instead.
+*.tif
+*.TIF
+*.tiff
+*.TIFF
+*.img
+*.IMG
+raw/
+pipeline/terrain/raw/
