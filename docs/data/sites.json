@@ -1,6 +1,16 @@
 {
  "region": "Lunar south pole",
- "basemap": null,
+ "basemap": {
+  "image": "hillshade.png",
+  "psr_image": "psr.png",
+  "extent_m": [
+   -160000.0,
+   160000.0,
+   -160000.0,
+   160000.0
+  ],
+  "credit": "Shaded relief from LRO LOLA LDEM_80S_80MPP_ADJ (NASA PGDA, Barker et al. 2023); permanently shadowed regions from LRO LOLA LPSR_80S_20MPP_ADJ (NASA PGDA, Barker et al. 2023)"
+ },
  "sites": [
   {
    "id": "shackleton_rim",
