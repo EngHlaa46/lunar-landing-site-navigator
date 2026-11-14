@@ -7,7 +7,8 @@ Data contract (CLAUDE.md, pipeline/ephemeris/README.md -- do not change):
   JPL Horizons, target 301 (Moon), observer 500@399 (geocentre), quantities 14, 15, 20;
   MOON_ME frame, east longitude positive, wrapped to -180..180. Times UTC. Distances km.
 
-Sanity checks (the script exits 1 if any fails):
+Sanity checks run BEFORE anything is written; if any fails the script exits 1 and leaves
+docs/data/ephemeris.json untouched:
   - sun_sublat within +-1.6 deg (lunar equator tilt 1.543 deg + physical libration)
   - sun_sublon moves west (decreases) every day, about 12.19 deg/day on average
   - sub-Earth point within about +-8 deg of (0, 0) (optical libration)
@@ -216,16 +217,22 @@ def main():
 
     print("Fetching from JPL Horizons:")
     doc = build(parse_utc(args.start), parse_utc(args.stop))
-    OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    OUT_JSON.write_text(json.dumps(doc, separators=(",", ":")) + "\n", encoding="utf-8")
-    print(f"wrote {OUT_JSON.relative_to(REPO_ROOT)}: {len(doc['sun_sublat'])} samples, "
-          f"{OUT_JSON.stat().st_size:,} bytes")
 
+    # Check first; only write ephemeris.json when every check passes, so a bad run
+    # never replaces the last good file.
     print("Sanity checks:")
     failures = check(doc)
     if failures:
-        sys.exit(f"{len(failures)} check(s) failed: {failures}")
+        sys.exit(f"{len(failures)} check(s) failed: {failures}. "
+                 f"{OUT_JSON.relative_to(REPO_ROOT)} was NOT written.")
     print("All sanity checks passed.")
+
+    OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
+    tmp = OUT_JSON.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(doc, separators=(",", ":")) + "\n", encoding="utf-8")
+    tmp.replace(OUT_JSON)  # atomic swap: readers never see a half-written file
+    print(f"wrote {OUT_JSON.relative_to(REPO_ROOT)}: {len(doc['sun_sublat'])} samples, "
+          f"{OUT_JSON.stat().st_size:,} bytes")
 
 
 if __name__ == "__main__":
