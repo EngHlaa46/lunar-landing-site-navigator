@@ -40,10 +40,10 @@ MAX_SLOPE_DEG = 5.0
 SEARCH_RADIUS_OVERRIDES_M = {
     # shackleton_rim: no pixel under 5 deg within 1.5 km (flattest is 6.9 deg;
     # the placeholder itself is on a 17 deg slope). At 2 km the highest flat
-    # pixel is on the rim crest (the highest point along the radial line
-    # from the crater centre), about 11.1 km from the centre of the crater
-    # floor as measured in this DEM, and it stays the winner for radii out to
-    # 5 km, so the pick does not depend on the exact radius chosen.
+    # pixel is on the rim crest: 10.4 km from Shackleton's IAU centre
+    # (lat -89.67, lon 129.78), where the DEM's inner wall tops out at 10.40 km.
+    # It stays the winner for radii out to 5 km, so the pick does not depend
+    # on the exact radius chosen.
     "shackleton_rim": 2000.0,
 }
 
