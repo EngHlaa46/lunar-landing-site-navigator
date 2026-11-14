@@ -19,6 +19,7 @@ Source: LOLA, NASA PGDA, Barker et al. 2023, PSJ 4, 183.
 
 Usage (from the repo root):
     python pipeline/terrain/horizon.py --site shackleton_rim
+    python pipeline/terrain/horizon.py --all                 # every site in sites.json
     python pipeline/terrain/horizon.py --test-point LAT LON   # check only, writes nothing
 """
 
@@ -208,22 +209,29 @@ def write_site(site_id, r):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--site", help="site id from docs/data/sites.json (writes its horizon file)")
+    ap.add_argument("--all", action="store_true", help="every site in sites.json (one horizon file each)")
     ap.add_argument("--test-point", nargs=2, type=float, metavar=("LAT", "LON"),
                     help="compute and report a horizon for any point; writes nothing to docs/data")
     args = ap.parse_args()
-    if not args.site and not args.test_point:
-        ap.error("give --site and/or --test-point")
+    if not (args.site or args.all or args.test_point):
+        ap.error("give --site, --all and/or --test-point")
 
     dem = Dem(DEM_PATH)
-    if args.site:
-        sites = json.loads((DATA_DIR / "sites.json").read_text(encoding="utf-8"))["sites"]
-        site = next((s for s in sites if s["id"] == args.site), None)
-        if site is None:
+    sites = json.loads((DATA_DIR / "sites.json").read_text(encoding="utf-8"))["sites"]
+    if args.all:
+        todo = sites
+    elif args.site:
+        todo = [s for s in sites if s["id"] == args.site]
+        if not todo:
             ap.error(f"site {args.site!r} not in sites.json")
+    else:
+        todo = []
+    for site in todo:
         r = compute_horizon(dem, site["lat"], site["lon"])
         report(site["id"], r)
         plot(site["id"], site["name"], r)
         write_site(site["id"], r)
+        print()
     if args.test_point:
         lat, lon = args.test_point
         r = compute_horizon(dem, lat, lon)

@@ -50,11 +50,16 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Regenerate the MOCK data (only needed until real data exists):
+Regenerate the MOCK data:
 
 ```bash
 python pipeline/tools/make_mock_data.py
 ```
+
+It only overwrites files whose `source` contains MOCK, skips `sites.json`
+if it already exists, and prints which files it wrote and which it skipped,
+so real data is never replaced. `--force` overwrites everything (with a loud
+warning); avoid it unless you really mean to go back to MOCK data.
 
 Check `docs/data/` against the data contract (CI runs this on every push and
 pull request; it exits non-zero on any error and warns about MOCK files):
