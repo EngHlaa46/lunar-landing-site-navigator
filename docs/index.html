@@ -458,7 +458,7 @@ section[id]{scroll-margin-top:90px}
         <div class="map-legend">
           <div><svg width="34" height="20" viewBox="0 0 34 20"><circle cx="10" cy="10" r="7" fill="none" stroke="#1f2b47" stroke-width="3"/><circle cx="10" cy="10" r="7" fill="none" stroke="#FFC24A" stroke-width="3" stroke-dasharray="30 44" transform="rotate(-90 10 10)"/><circle cx="10" cy="10" r="3" fill="#3DDC97"/></svg>Ring shows sunlit time in the selected window</div>
           <div class="lg-grid"><span><i class="lg-dot" style="background:#3DDC97"></i>Sun and Earth now</span><span><i class="lg-dot" style="background:#FFC24A"></i>Sun only</span><span><i class="lg-dot" style="background:#4FB3FF"></i>Earth only</span><span><i class="lg-dot" style="background:#FF5A4E"></i>Neither</span></div>
-          <p id="mapNote">Relief shading is illustrative, not real topography. Site positions are approximate demo points.</p>
+          <p id="mapNote">Relief shading is illustrative, not real topography. Site positions and terrain horizons are real LOLA data (NASA PGDA). The ephemeris is still MOCK until the real file lands.</p>
         </div>
       </div>
     </div>
@@ -507,7 +507,7 @@ section[id]{scroll-margin-top:90px}
 
   <footer>
     <div id="srcNote"></div>
-    <div>Crater names, centres and diameters: USGS Gazetteer of Planetary Nomenclature. Planned real inputs: JPL Horizons ephemeris and LRO LOLA terrain (NASA PGDA).</div>
+    <div>Crater names, centres and diameters: USGS Gazetteer of Planetary Nomenclature. Terrain and site positions: real LRO LOLA polar DEM data (NASA PGDA, Barker et al. 2023). Ephemeris: still MOCK until the real JPL Horizons file lands.</div>
     <div id="basemapCredit"></div>
     <div>Sun disk visibility, planning margins and best-pick rankings are application-derived screening aids, not official NASA ratings. Mission decisions need validated mission-grade models.</div>
     <div>Use of AI: code drafted with an AI assistant (Claude) and reviewed by the team.</div>
@@ -804,7 +804,7 @@ const P = (lat, lon) => { const rho = deg(2*Math.tan(rad(90 + lat)/2)); return [
 const FEATURES = [
   {name:"Shackleton",  lat:-89.67, lon:129.78, d_km:21.0},
   {name:"de Gerlache", lat:-88.50, lon:-87.10, d_km:32.4},
-  {name:"Haworth",     lat:-87.20, lon:-7.49,  d_km:51.4}
+  {name:"Haworth",     lat:-87.45, lon:-5.17,  d_km:51.4}
 ];
 function dirAt(s, az){ // screen direction for a local azimuth at a site
   const N = [Math.sin(rad(s.lon)), -Math.cos(rad(s.lon))], E = [Math.cos(rad(s.lon)), Math.sin(rad(s.lon))];
