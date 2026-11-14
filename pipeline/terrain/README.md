@@ -61,7 +61,13 @@ really mean to replace the real files with MOCK data.
   4.14 km above the observer (LDEM height 5.96 km; minimum at azimuth 326) to
   raise the horizon there. The other three sites need more than 6 km
   everywhere (shackleton_rim 13.35 km, malapert_massif 6.63 km,
-  haworth_rim 17.66 km), so their edge effect is negligible.
+  haworth_rim 22.20 km), so their edge effect is negligible.
+- **haworth_rim was re-picked on the rim** using Haworth's corrected IAU centre
+  (lat -87.45, lon -5.17, D 51.4 km). The first pick was 32.1 km from that
+  centre, about 4.3 km outside the rim. The new search starts at the top of the
+  inner wall (27.8 km from the centre) and takes the nearest flat pixel,
+  because the highest flat pixel moved at every search radius. See
+  `START_POINTS` and `PICK_RULE_OVERRIDES` in `pick_sites.py`.
 - Slopes and heights are at DEM scale (80 m pixels); lander-scale slopes may
   be steeper.
 - The DEM's height reference surface is not stated in the file or on the
