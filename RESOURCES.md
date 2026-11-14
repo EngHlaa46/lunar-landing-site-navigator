@@ -25,8 +25,8 @@ uses that resource.
 | astroquery | https://astroquery.readthedocs.io/ | Listed in requirements.txt (querying JPL Horizons from Python) | Repo setup |
 | GitHub Pages and GitHub Actions | https://pages.github.com/ , https://github.com/features/actions | Hosting the static site; running validate_data.py on every push/PR | Repo setup |
 | AI assistance (Claude, Anthropic) | https://www.anthropic.com/claude | Coding help, including scaffolding this repository. Disclosed in the site footer and on the project page. | Team brief |
-| Quickmap (LROC) | https://quickmap.lroc.asu.edu/ | Space Apps challenge resource: exploring the south pole and checking site locations | Team brief |
-| Moon Trek (NASA) | https://trek.nasa.gov/moon/ | Space Apps challenge resource: exploring the south pole and checking site locations | Team brief |
+| Quickmap (LROC) | https://quickmap.lroc.asu.edu/ | Listed in the challenge resources; not used in this project | Team brief |
+| Moon Trek (NASA) | https://trek.nasa.gov/moon/ | Listed in the challenge resources; not used in this project | Team brief |
 | | | | |
 | | | | |
 | | | | |
