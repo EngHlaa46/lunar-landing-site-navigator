@@ -16,7 +16,7 @@ uses that resource.
 | Google Fonts: Barlow (SIL OFL) | https://fonts.google.com/specimen/Barlow | UI body font | Team brief |
 | Google Fonts: Barlow Condensed (SIL OFL) | https://fonts.google.com/specimen/Barlow+Condensed | UI headings font | Team brief |
 | numpy | https://numpy.org/ | Array maths in the data pipeline | Team brief |
-| scipy | https://scipy.org/ | Interpolation and numerical routines in the data pipeline | Team brief |
+| scipy | https://scipy.org/ | Bilinear interpolation of DEM heights (`scipy.ndimage.map_coordinates`) in the terrain horizon ray-cast | Team brief |
 | rasterio | https://rasterio.readthedocs.io/ | Reading the LOLA DEM GeoTIFFs | Team brief |
 | pyproj | https://pyproj4.github.io/pyproj/ | Polar stereographic to lat/lon conversions | Team brief |
 | matplotlib | https://matplotlib.org/ | Quick-look DEM figure and horizon plots in the terrain pipeline | Terrain |
