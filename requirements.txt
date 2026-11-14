@@ -1,6 +1,7 @@
 numpy
 scipy
 matplotlib
+pillow
 rasterio
 pyproj
 requests

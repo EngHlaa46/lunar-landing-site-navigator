@@ -84,7 +84,13 @@ def local_north_east(dem, lat, lon):
     xe, ye = dem.to_xy.transform(lon + NUDGE_DEG, lat)  # lon + : east
     north = np.array([xn - x0, yn - y0])
     east = np.array([xe - x0, ye - y0])
-    return north / np.linalg.norm(north), east / np.linalg.norm(east)
+    north /= np.linalg.norm(north)
+    if np.linalg.norm(east) < 1e-9:
+        # Exactly at the pole a longitude nudge does not move the point. Use the
+        # meridian of `lon` as north (as the app does) and east = north turned 90 deg
+        # clockwise on the map, which is what the nudge gives everywhere else.
+        return north, np.array([north[1], -north[0]])
+    return north, east / np.linalg.norm(east)
 
 
 def great_circle_m(lat1, lon1, lat2, lon2):
