@@ -458,7 +458,7 @@ section[id]{scroll-margin-top:90px}
         <div class="map-legend">
           <div><svg width="34" height="20" viewBox="0 0 34 20"><circle cx="10" cy="10" r="7" fill="none" stroke="#1f2b47" stroke-width="3"/><circle cx="10" cy="10" r="7" fill="none" stroke="#FFC24A" stroke-width="3" stroke-dasharray="30 44" transform="rotate(-90 10 10)"/><circle cx="10" cy="10" r="3" fill="#3DDC97"/></svg>Ring shows sunlit time in the selected window</div>
           <div class="lg-grid"><span><i class="lg-dot" style="background:#3DDC97"></i>Sun and Earth now</span><span><i class="lg-dot" style="background:#FFC24A"></i>Sun only</span><span><i class="lg-dot" style="background:#4FB3FF"></i>Earth only</span><span><i class="lg-dot" style="background:#FF5A4E"></i>Neither</span></div>
-          <p id="mapNote">Relief shading is illustrative, not real topography. Site positions and terrain horizons are real LOLA data (NASA PGDA). The ephemeris is still MOCK until the real file lands.</p>
+          <p><span id="mapNote">Relief shading is illustrative, not real topography. Site positions and terrain horizons are real LOLA data (NASA PGDA).</span> <span id="mapEph"></span></p>
         </div>
       </div>
     </div>
@@ -507,7 +507,7 @@ section[id]{scroll-margin-top:90px}
 
   <footer>
     <div id="srcNote"></div>
-    <div>Crater names, centres and diameters: USGS Gazetteer of Planetary Nomenclature. Terrain and site positions: real LRO LOLA polar DEM data (NASA PGDA, Barker et al. 2023). Ephemeris: still MOCK until the real JPL Horizons file lands.</div>
+    <div>Crater names, centres and diameters: USGS Gazetteer of Planetary Nomenclature. Terrain and site positions: real LRO LOLA polar DEM data (NASA PGDA, Barker et al. 2023). <span id="ephFoot"></span></div>
     <div id="basemapCredit"></div>
     <div>Sun disk visibility, planning margins and best-pick rankings are application-derived screening aids, not official NASA ratings. Mission decisions need validated mission-grade models.</div>
     <div>Use of AI: code drafted with an AI assistant (Claude) and reviewed by the team.</div>
@@ -617,6 +617,7 @@ const $ = id => document.getElementById(id);
 const fmtT = ms => new Date(ms).toISOString().slice(0,16).replace("T"," ") + " UTC";
 const sgn = x => (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(1) + "°";
 const short = n => n.replace(/\s*\(demo\)$/g, "");
+const isMock = src => /mock/i.test(src || "");  // one MOCK test for the data chip, ephemeris notes and custom locations
 function rng(seed){ return () => (seed = (seed*16807) % 2147483647) / 2147483647; }
 
 async function getJSON(f){ const r = await fetch("data/" + f, {cache:"no-store"}); if (!r.ok) throw new Error(f + " " + r.status); return r.json(); }
@@ -949,7 +950,7 @@ function renderMapSide(){
     S.sites.map((st, k) => { if (st.group !== gname) return ""; const o = stats(st);
       return `<div class="scard-wrap"><button class="scard" data-k="${k}" aria-pressed="${k === S.sel}">
         <span class="sdot" style="background:${nowColor(o.now)};box-shadow:0 0 10px ${nowColor(o.now)}"></span>
-        <span class="nm">${short(st.name)}${st.terrain === "coarse" ? '<span class="tag">coarse terrain</span>' : ""}</span>
+        <span class="nm">${short(st.name)}${st.terrain === "coarse" ? `<span class="tag">coarse terrain${isMock(st.data_source) ? ", MOCK" : ""}</span>` : ""}</span>
         <span class="co">${Math.abs(st.lat).toFixed(2)}° S, ${Math.abs(st.lon).toFixed(2)}° ${st.lon < 0 ? "W" : "E"}</span>
         <span class="bars"><span>Sun</span><i><b style="width:${o.sun.toFixed(0)}%;background:var(--sun)"></b></i><span>${o.sun.toFixed(0)}%</span>
           <span>Earth</span><i><b style="width:${o.dte.toFixed(0)}%;background:var(--earth)"></b></i><span>${o.dte.toFixed(0)}%</span></span>
@@ -964,7 +965,8 @@ function addCustom(lat, lon){
   if (S.grid && S.grid.points && S.grid.points.length){
     const [x0, y0] = P(lat, lon); let best = null, bd = 1e9;
     S.grid.points.forEach(g => { const [x1, y1] = P(g.lat, g.lon), d = Math.hypot(x1 - x0, y1 - y0); if (d < bd){ bd = d; best = g; } });
-    hz = normalizeHorizon(best.horizon_el_deg || best.elevation_deg || best.horizon, "coarse grid"); note = `nearest grid point ${(bd*KM_PER_UNIT).toFixed(1)} km away`;
+    hz = normalizeHorizon(best.horizon_el_deg || best.elevation_deg || best.horizon, S.grid.source ? `coarse grid: ${S.grid.source}` : "coarse grid");
+    note = `nearest grid point ${(bd*KM_PER_UNIT).toFixed(1)} km away${isMock(S.grid.source) ? ", MOCK grid" : ""}`;
   } else if (S.demo){ hz = demoGridHorizon(lat, lon); note = "synthetic demo horizon"; }
   else { hz = {az_step_deg:2, elevation_deg:new Array(180).fill(0), source:"flat horizon"}; note = "no terrain grid loaded, flat horizon assumed"; }
   S.custom++;
@@ -1378,12 +1380,15 @@ function computeScale(){
   S.sites = sites; S.times = sites[0].samples.map(x => x.time_utc);
   if (S.times.length > 1) S.stepH = (Date.parse(S.times[1]) - Date.parse(S.times[0]))/3600e3;
   $("back").textContent = `−${S.stepH} h`; $("fwd").textContent = `+${S.stepH} h`;
-  const mock = sites.some(s => /mock/i.test(s.data_source || ""));
+  const mock = sites.some(s => isMock(s.data_source));
   $("srcText").textContent = mock ? "DEMO, not NASA" : "Team pipeline";
   $("srcChip").classList.toggle("demo", mock); $("srcChip").classList.toggle("real", !mock);
   $("srcNote").textContent = mock
     ? `Showing synthetic demo data (${from === "files" ? "loaded from data/ files" : "built into the page"}). It imitates south-pole behaviour but must be replaced with JPL Horizons and LOLA results before submission.`
     : `Data source: ${sites.map(s => s.data_source).filter((v, i, a) => a.indexOf(v) === i).join("; ")}.`;
+  const ephMock = S.eph ? isMock(S.eph.source) : mock;
+  $("mapEph").textContent = ephMock ? "The ephemeris is still MOCK until the real file lands." : "Sun and Earth positions: JPL Horizons ephemeris.";
+  $("ephFoot").textContent = ephMock ? "Ephemeris: still MOCK until the real JPL Horizons file lands." : "Ephemeris: JPL Horizons (NASA/JPL Solar System Dynamics Group).";
   $("dt").min = S.times[0].slice(0,16); $("dt").max = S.times[S.times.length - 1].slice(0,16);
   computeScale();
   document.querySelector(".scene").classList.add("intro");
