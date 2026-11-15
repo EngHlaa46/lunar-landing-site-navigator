@@ -10,19 +10,22 @@ communication. The page computes Sun and Earth positions from a JPL Horizons
 ephemeris and compares them with terrain horizons derived from LRO LOLA polar
 elevation models.
 
-> **Status:** the files in `docs/data/` are currently **MOCK** data (see the
-> `source` field in each file). They will be replaced by real pipeline output.
+**Live site:** https://enghlaa46.github.io/lunar-landing-site-navigator/
+
+> **Status:** all data in `docs/data/` is real: the JPL Horizons ephemeris, and
+> LRO LOLA terrain horizons, basemap and horizon grid via NASA PGDA (see the
+> `source` field in each file and [RESOURCES.md](RESOURCES.md)).
 
 ## Team
 
-| Role | Name |
-|---|---|
-| Team lead | _TBD_ |
-| Ephemeris (JPL Horizons → `ephemeris.json`) | _TBD_ |
-| Terrain (LOLA DEM → sites, horizons, basemap) | _TBD_ |
-| UI (`docs/index.html`) | _TBD_ |
-| _Role TBD_ | _TBD_ |
-| _Role TBD_ | _TBD_ |
+| Role | Name | GitHub |
+|---|---|---|
+| Team lead + Terrain/Horizon | Hlaa | EngHlaa46 |
+| Ephemeris | Sara | sarabl-93 |
+| Mission Logic | Lina | EngLinaa |
+| UI | Hanin | ihuyi1 |
+| Presentation | Omnia | Engomnia |
+| Video | Yara | - |
 
 ## Repository layout
 
