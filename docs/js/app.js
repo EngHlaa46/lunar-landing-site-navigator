@@ -104,11 +104,17 @@ function skyPlanet(c, x, y, rad, pl, sx, sy, alpha){
   c.globalAlpha = alpha*.35; const hg = c.createRadialGradient(x, y, rad, x, y, rad*3.2); hg.addColorStop(0, pl.c[0] + "55"); hg.addColorStop(1, "rgba(0,0,0,0)");
   c.fillStyle = hg; c.beginPath(); c.arc(x, y, rad*3.2, 0, 6.283); c.fill(); c.globalAlpha = 1;
 }
+// one frame never stops the loop: if a frame fails in some browser, log it once and keep animating
 function skyFrame(now){
+  try{ skyDraw(now === undefined ? performance.now() : now); }
+  catch(e){ if (!SKY.err){ SKY.err = true; console.warn("sky frame skipped:", e); } }
+  if (!SKY.still){ cancelAnimationFrame(SKY.raf); SKY.raf = requestAnimationFrame(skyFrame); }
+}
+function skyDraw(now){
   const {c, w, h, dpr} = SKY; if (!c) return;
   const t = (now - SKY.t0)/1000;
   SKY.mx += (SKY.tx - SKY.mx)*.04; SKY.my += (SKY.ty - SKY.my)*.04;
-  const ringTarget = document.body.dataset.view === "home" ? 1 : .22; SKY.ringA += (ringTarget - SKY.ringA)*.05;  // solar system: full on home, faint elsewhere
+  const ringTarget = document.body.dataset.view === "home" ? 1 : 0; SKY.ringA += (ringTarget - SKY.ringA)*.08;  // solar system only on the home view, so it never shows through data panels
   c.setTransform(dpr, 0, 0, dpr, 0, 0); c.globalCompositeOperation = "source-over"; c.globalAlpha = 1;
   c.fillStyle = "#02040a"; c.fillRect(0, 0, w, h);
   const dx = Math.sin(t*.03)*w*.04, dy = Math.cos(t*.025)*h*.03;
@@ -125,7 +131,7 @@ function skyFrame(now){
   }
   c.globalCompositeOperation = "lighter";
   SKY.meteors = SKY.meteors.filter(m => { m.x += m.vx; m.y += m.vy; m.life -= .018; if (m.life <= 0) return false;
-    const gr = c.createLinearGradient(m.x, m.y, m.x - m.vx*14, m.y - m.vy*14); gr.addColorStop(0, `rgba(255,236,200,${m.life})`); gr.addColorStop(1, "rgba(120,180,255,0)");
+    const gr = c.createLinearGradient(m.x, m.y, m.x - m.vx*14, m.y - m.vy*14); gr.addColorStop(0, `rgba(255,236,200,${m.life.toFixed(3)})`); gr.addColorStop(1, "rgba(120,180,255,0)");
     c.globalAlpha = 1; c.strokeStyle = gr; c.lineWidth = 1.6; c.beginPath(); c.moveTo(m.x, m.y); c.lineTo(m.x - m.vx*14, m.y - m.vy*14); c.stroke(); return true; });
   // decorative solar system around the home title (stylised, not to scale, shows no data)
   if (SKY.ringA > .01){
@@ -133,7 +139,8 @@ function skyFrame(now){
     c.globalCompositeOperation = "lighter";
     // the Sun: a bright point with layered glow
     const sg = c.createRadialGradient(G.cx, G.cy, 0, G.cx, G.cy, G.A*.5);
-    sg.addColorStop(0, `rgba(255,236,190,${.55*A1})`); sg.addColorStop(.04, `rgba(255,190,90,${.35*A1})`); sg.addColorStop(.25, `rgba(90,140,255,${.10*A1})`); sg.addColorStop(1, "rgba(0,0,0,0)");
+    // alpha written with toFixed so tiny values never become "1e-4" (not every browser parses that in a colour)
+    sg.addColorStop(0, `rgba(255,236,190,${(.55*A1).toFixed(3)})`); sg.addColorStop(.04, `rgba(255,190,90,${(.35*A1).toFixed(3)})`); sg.addColorStop(.25, `rgba(90,140,255,${(.10*A1).toFixed(3)})`); sg.addColorStop(1, "rgba(0,0,0,0)");
     c.globalAlpha = 1; c.fillStyle = sg; c.fillRect(G.cx - G.A*.5, G.cy - G.A*.5, G.A, G.A);
     const pulse = 1 + .08*Math.sin(t*1.3);
     c.globalAlpha = .95*A1; c.fillStyle = "#fff6dc"; c.beginPath(); c.arc(G.cx, G.cy, 3.2*pulse, 0, 6.283); c.fill();
@@ -161,17 +168,96 @@ function skyFrame(now){
     c.globalAlpha = 1;
   }
   c.globalCompositeOperation = "source-over"; c.globalAlpha = 1;
-  if (!SKY.still) SKY.raf = requestAnimationFrame(skyFrame);
 }
 function skyStart(){
   SKY.still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  skyBuild(); SKY.t0 = performance.now(); cancelAnimationFrame(SKY.raf); SKY.raf = requestAnimationFrame(skyFrame);
+  skyBuild(); SKY.t0 = performance.now(); cancelAnimationFrame(SKY.raf);
+  SKY.ringA = viewFromHash() === "home" ? 1 : 0;  // opening a section link directly: no solar system fading out behind it
+  skyFrame(performance.now());  // draw the first frame right away; this also starts the animation loop
   if (skyStart.bound) return; skyStart.bound = true;
   addEventListener("pointermove", e => { SKY.tx = e.clientX/innerWidth - .5; SKY.ty = e.clientY/innerHeight - .5; }, {passive:true});
   let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { skyBuild(); if (SKY.still) requestAnimationFrame(skyFrame); }, 150); });
-  document.addEventListener("visibilitychange", () => { cancelAnimationFrame(SKY.raf); if (!document.hidden && !SKY.still) SKY.raf = requestAnimationFrame(skyFrame); });
+  document.addEventListener("visibilitychange", () => { cancelAnimationFrame(SKY.raf); if (!document.hidden) SKY.raf = requestAnimationFrame(skyFrame); });
 }
 function drawStars(){ /* replaced by the animated sky; kept so older calls stay harmless */ }
+
+/* ---------- optional ambient sound (off by default) ----------
+   Synthesized live with the Web Audio API from noise only, so it has no notes and no pitch:
+   a deep rumble, a slowly sweeping "cosmic wind", and now and then a soft airy sparkle with an echo.
+   No recordings, no music, no instruments, nothing downloaded. Starts only when the user presses
+   the speaker button. */
+const SND = { ctx:null, master:null, on:false, timer:0, nodes:[] };
+const SND_KEY = "lsn_sound";
+function sndNoise(ctx, seconds, smooth, gainFix){
+  // looping stereo noise; "smooth" near 1 gives deep, dark noise, 0 gives bright white noise
+  const len = Math.round(ctx.sampleRate*seconds), buf = ctx.createBuffer(2, len, ctx.sampleRate);
+  for (let ch = 0; ch < 2; ch++){ const d = buf.getChannelData(ch); let b = 0;
+    for (let i = 0; i < len; i++){ b = smooth*b + (1 - smooth)*(Math.random()*2 - 1); d[i] = b*gainFix; } }
+  return buf;
+}
+function sndBuild(){
+  const ctx = SND.ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const master = SND.master = ctx.createGain(); master.gain.value = 0;
+  const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
+  // echo used by the sparkles and lightly by the wind
+  const delay = ctx.createDelay(2), fb = ctx.createGain(), wet = ctx.createGain(), dlp = ctx.createBiquadFilter();
+  delay.delayTime.value = .37; fb.gain.value = .5; wet.gain.value = .45; dlp.type = "lowpass"; dlp.frequency.value = 5000;
+  delay.connect(dlp); dlp.connect(fb); fb.connect(delay); dlp.connect(wet); wet.connect(master);
+  SND.echo = delay;
+  // 1) deep rumble: very dark noise, low-passed, slowly breathing (no oscillators, so no pitch)
+  const rum = ctx.createBufferSource(); rum.buffer = sndNoise(ctx, 6, .995, 14); rum.loop = true;
+  const rumLP = ctx.createBiquadFilter(); rumLP.type = "lowpass"; rumLP.frequency.value = 160; rumLP.Q.value = .3;
+  const rumGain = ctx.createGain(); rumGain.gain.value = .5;
+  rum.connect(rumLP); rumLP.connect(rumGain); rumGain.connect(master);
+  const breathe = ctx.createOscillator(), bg = ctx.createGain(); breathe.frequency.value = .05; bg.gain.value = .18; breathe.connect(bg); bg.connect(rumGain.gain); breathe.start();
+  rum.start(); SND.nodes.push(rum, breathe);
+  // 2) cosmic wind: noise through a wide band-pass filter whose centre drifts up and down
+  const noise = ctx.createBufferSource(); noise.buffer = sndNoise(ctx, 4, .97, 3.2); noise.loop = true;
+  const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 520; bp.Q.value = .6;
+  const windGain = ctx.createGain(); windGain.gain.value = .22;
+  noise.connect(bp); bp.connect(windGain); windGain.connect(master); windGain.connect(delay);
+  const sweep = ctx.createOscillator(), sg = ctx.createGain(); sweep.frequency.value = .045; sg.gain.value = 320; sweep.connect(sg); sg.connect(bp.frequency); sweep.start();
+  const swell = ctx.createOscillator(), swg = ctx.createGain(); swell.frequency.value = .03; swg.gain.value = .1; swell.connect(swg); swg.connect(windGain.gain); swell.start();
+  noise.start(); SND.nodes.push(noise, sweep, swell);
+  SND.white = sndNoise(ctx, 1, 0, 1);  // short bright noise for the sparkles
+}
+// 3) now and then a soft airy sparkle: a few tiny bursts of high, bright noise (unpitched), drifting left or right
+function sndSparkle(){
+  if (!SND.on || !SND.ctx) return;
+  const ctx = SND.ctx, t0 = ctx.currentTime, pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+  const out = pan || SND.master; if (pan){ pan.pan.value = Math.random()*1.6 - .8; pan.connect(SND.master); pan.connect(SND.echo); }
+  const grains = 2 + Math.floor(Math.random()*4);
+  for (let k = 0; k < grains; k++){
+    const t = t0 + k*(.06 + Math.random()*.12), src = ctx.createBufferSource(), hp = ctx.createBiquadFilter(), g = ctx.createGain();
+    src.buffer = SND.white; hp.type = "highpass"; hp.frequency.value = 5500 + Math.random()*3000; hp.Q.value = .5;
+    const peak = .05*(1 - k/(grains + 1)), dur = .35 + Math.random()*.6;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + .006); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    src.connect(hp); hp.connect(g); g.connect(out); if (!pan) g.connect(SND.echo);
+    src.start(t, Math.random()*.5); src.stop(t + dur + .05);
+  }
+  SND.timer = setTimeout(sndSparkle, 3500 + Math.random()*6000);
+}
+function sndSet(on, remember = true){
+  const b = $("soundBtn");
+  if (on && !SND.ctx){ try{ sndBuild(); }catch(e){ toast("Sound is not available in this browser"); return; } }
+  SND.on = on;
+  if (remember){ try{ localStorage.setItem(SND_KEY, on ? "1" : "0"); }catch(e){} }
+  b.setAttribute("aria-pressed", String(on)); b.setAttribute("aria-label", "Background sound: " + (on ? "on" : "off")); b.title = "Background sound (" + (on ? "on" : "off") + ")";
+  if (!SND.ctx) return;
+  const ctx = SND.ctx, t = ctx.currentTime, g = SND.master.gain;
+  g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
+  clearTimeout(SND.timer);
+  if (on){ ctx.resume(); g.linearRampToValueAtTime(.55, t + 2.5); SND.timer = setTimeout(sndSparkle, 2500); }
+  else { g.linearRampToValueAtTime(0, t + 1); setTimeout(() => { if (!SND.on) ctx.suspend(); }, 1100); }
+}
+function sndBind(){
+  $("soundBtn").addEventListener("click", () => sndSet(!SND.on));
+  // pause when the tab is hidden, resume when it comes back (only if the user had it on)
+  document.addEventListener("visibilitychange", () => { if (!SND.ctx || !SND.on) return; document.hidden ? SND.ctx.suspend() : SND.ctx.resume(); });
+  // browsers block sound until the user interacts; if they chose sound last time, start on their first tap
+  let pref = "0"; try{ pref = localStorage.getItem(SND_KEY) || "0"; }catch(e){}
+  if (pref === "1"){ const first = e => { if (e.target.closest && e.target.closest("#soundBtn")) return; sndSet(true, false); }; addEventListener("pointerdown", first, {once:true}); }
+}
 
 /* ---------- hero scene ---------- */
 function smoothPath(p){
@@ -375,7 +461,9 @@ function renderMap(){
 function nowColor(x){ return x._sv && x._ev ? "#3DDC97" : x._sv ? "#FFC24A" : x._ev ? "#4FB3FF" : "#FF5A4E"; }
 function renderMapDyn(){
   if (!M.built || !S.sites.length) return;
-  const sk = Math.min(1.9, Math.max(1, 720/Math.max(1, $("mapStage").clientWidth))), v = M.view, fs = v.w*0.021*sk, r = v.w*0.0085*sk, F = `font-family="Inter,sans-serif"`;
+  const sk = Math.min(1.9, Math.max(1, 720/Math.max(1, $("mapStage").clientWidth))), v = M.view, fs = v.w*0.021*sk, r = v.w*0.0085*sk;
+  // dark outline under every map label so white text stays readable on the bright LOLA relief
+  const F = `font-family="Inter,sans-serif" letter-spacing="0" paint-order="stroke" stroke="rgba(3,7,16,.88)" stroke-width="${fs*.2}" stroke-linejoin="round"`;
   const s = site(), now = s.samples[S.i];
   let g = "";
   if (M.layers.grid){
@@ -403,7 +491,7 @@ function renderMapDyn(){
         ${label === "Earth"
           ? `<use href="#earthGlobe" x="${ex - r*1.9}" y="${ey - r*1.9}" width="${r*3.8}" height="${r*3.8}" opacity="${vis ? 1 : .45}"/>`
           : `<circle cx="${ex}" cy="${ey}" r="${r*1.35}" fill="${vis ? col : "#0b1222"}" stroke="${col}" stroke-width="2" vector-effect="non-scaling-stroke"/>`}
-        <text x="${ex + dd[0]*r*4.2}" y="${ey + dd[1]*r*4.2 + fs*.35}" text-anchor="${dd[0] > .35 ? "start" : dd[0] < -.35 ? "end" : "middle"}" fill="${col}" font-size="${fs*.95}" font-weight="600" ${F}>${label}${vis ? "" : " hidden"}</text>`; };
+        <text x="${ex + dd[0]*r*4.2}" y="${ey + dd[1]*r*4.2 + fs*.35 + (label === "Sun" ? -fs*.75 : fs*.75)}" text-anchor="${dd[0] > .35 ? "start" : dd[0] < -.35 ? "end" : "middle"}" fill="${col}" font-size="${fs*.95}" font-weight="600" ${F}>${label}${vis ? "" : " hidden"}</text>`; };
     g += ray(now.earth_az, now._ev, "#4FB3FF", "Earth") + ray(now.sun_az, now._sv, "#FFC24A", "Sun");
   }
 
@@ -412,7 +500,7 @@ function renderMapDyn(){
   S.sites.forEach((st, k) => {
     const [x, y] = P(st.lat, st.lon), on = k === S.sel, o = stats(st), xn = o.now;
     const R1 = r*2.2, C1 = 2*Math.PI*R1, col = nowColor(xn), name = short(st.name);
-    const right = x >= 0, lx = right ? x + R1 + r*1.6 : x - R1 - r*1.6, tw = name.length*fs*.5 + fs*.9;
+    const right = x >= 0, lx = right ? x + R1 + r*1.6 : x - R1 - r*1.6, tw = name.length*fs*.6 + fs*1.1;  // label box sized for Inter (wider than the old condensed font)
     g += `<g class="msite" data-k="${k}" style="cursor:pointer">
       ${on && !reduce ? `<circle class="pulse" cx="${x}" cy="${y}" r="${R1}" fill="none" stroke="#FFC24A" stroke-width="2" vector-effect="non-scaling-stroke"><animate attributeName="r" values="${R1};${R1*2.4}" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="1.8s" repeatCount="indefinite"/></circle>` : ""}
       <circle cx="${x}" cy="${y}" r="${R1*1.6}" fill="transparent"/>
@@ -877,6 +965,7 @@ function computeScale(){
 }
 (async function init(){
   skyStart();
+  sndBind();
   showView(viewFromHash());
   let data;
   try{ data = await loadData(); }
