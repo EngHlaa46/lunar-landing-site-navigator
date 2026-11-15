@@ -5,4 +5,3 @@ pillow
 rasterio
 pyproj
 requests
-astroquery
