@@ -2,7 +2,7 @@
 <!--
   Lunar Landing Site Navigator - 2026 NASA Space Apps Challenge (UI, team role 4)
   Use of AI: page structure, styling and JavaScript were drafted with an AI assistant (Claude)
-  and reviewed/edited by the team. Built-in demo data is synthetic.
+  and reviewed/edited by the team. All data is loaded from docs/data/; the page has no built-in data.
   References: fonts "Barlow" and "Barlow Condensed" via Google Fonts (SIL Open Font License).
   No NASA logos or insignia are used.
 -->
@@ -303,6 +303,15 @@ section[id]{scroll-margin-top:90px}
 .scene.intro .terrain-g{animation:rise 1.1s cubic-bezier(.2,.7,.2,1) both}
 .scene.intro .sky-g{animation:glow 1.6s ease both}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+/* about the data */
+.about{margin-top:12px}
+.about-status{margin:0 0 10px;padding:8px 12px;border-radius:6px;border:1px solid var(--edge);color:var(--text)}
+.about-status.mock{border-color:rgba(255,194,74,.55);background:rgba(255,194,74,.08);color:#ffe3a3}
+.about-list{margin:0;padding-left:20px;display:grid;gap:6px;color:var(--muted)}
+.about-list b{color:var(--text)}
+.about a{color:var(--earth)}
+.about-note{margin:12px 0 0;color:var(--faint);font-size:.85rem}.chipbtn[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -368,7 +377,7 @@ section[id]{scroll-margin-top:90px}
 
   <nav class="dock" id="dock" aria-label="Sections and tools">
     <div class="dock-links">
-      <a href="#horizon" data-sec="horizon">Horizon</a><a href="#map" data-sec="map">Map</a><a href="#status" data-sec="status">Status</a><a href="#compare" data-sec="compare">Compare</a>
+      <a href="#horizon" data-sec="horizon">Horizon</a><a href="#map" data-sec="map">Map</a><a href="#status" data-sec="status">Status</a><a href="#compare" data-sec="compare">Compare</a><a href="#about" data-sec="about">About the data</a>
     </div>
     <div class="dock-tools">
       <button class="tool" id="tourBtn" title="Guided tour (press ?)"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7.6 7.6a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4M10 14.6v.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="tl">Guide</span></button>
@@ -453,7 +462,7 @@ section[id]{scroll-margin-top:90px}
             <label>Longitude <input id="cLon" type="number" step="0.01" min="-180" max="180" placeholder="120.00"></label>
           </div>
           <div class="cbtns"><button class="tool primary" id="cGo">Analyse location</button><button class="tool" id="cPick" aria-pressed="false">Pick on map</button></div>
-          <p class="cnote" id="cNote">Uses the nearest point of the coarse terrain grid, so results are approximate.</p>
+          <p class="cnote" id="cNote">Custom locations use the horizon of the nearest point on a 10 km terrain grid. Near crater rims the horizon can change by tens of degrees over a few kilometres (5 km from Shackleton's rim it differs by up to 32°), so custom results there are rough. The four named sites use horizons computed at their exact positions.</p>
         </div>
         <div class="map-legend">
           <div><svg width="34" height="20" viewBox="0 0 34 20"><circle cx="10" cy="10" r="7" fill="none" stroke="#1f2b47" stroke-width="3"/><circle cx="10" cy="10" r="7" fill="none" stroke="#FFC24A" stroke-width="3" stroke-dasharray="30 44" transform="rotate(-90 10 10)"/><circle cx="10" cy="10" r="3" fill="#3DDC97"/></svg>Ring shows sunlit time in the selected window</div>
@@ -505,6 +514,20 @@ section[id]{scroll-margin-top:90px}
     </div>
   </details>
 
+  <section class="glass pad about" id="about" aria-labelledby="aboutTitle">
+    <div class="sec-title"><h2 id="aboutTitle">About the data</h2><p>Every resource we use is credited here and in RESOURCES.md.</p></div>
+    <p class="about-status" id="aboutStatus">Checking data status…</p>
+    <ul class="about-list">
+      <li><b>Sun and Earth positions:</b> <a href="https://ssd.jpl.nasa.gov/horizons/" target="_blank" rel="noopener">JPL Horizons System</a> (NASA JPL). Hourly values from 2026-12-01 to 2028-12-31 (18,288 samples) for the Moon (body 301) as seen from Earth's centre: the sub-solar point, the sub-Earth point and the Earth–Moon distance. The page corrects Earth's elevation for parallax (about 0.26°).</li>
+      <li><b>Terrain horizons and elevation:</b> LRO LOLA south-polar elevation model (LDEM_80S_80MPP_ADJ, 80 m per pixel) via <a href="https://pgda.gsfc.nasa.gov/products/90" target="_blank" rel="noopener">NASA PGDA</a> (Barker et al. 2023, <i>Planetary Science Journal</i> 4, 183, <a href="https://doi.org/10.3847/PSJ/acf3e1" target="_blank" rel="noopener">doi:10.3847/PSJ/acf3e1</a>). For each site we trace 360 directions out to the edge of the model from a point 2 m above the ground, correct for the Moon's curvature and keep the highest terrain angle. Sites are flat spots (slope under 5° at 80 m resolution). All four were checked against the elevation model: the Shackleton, de Gerlache and Haworth points sit on their crater rims, and the Malapert point is at the top of the massif. The map's shaded relief is computed from the same model; its shadowed areas come from the permanently shadowed region map LPSR_80S_20MPP_ADJ (same PGDA product).</li>
+      <li><b>Crater names:</b> <a href="https://planetarynames.wr.usgs.gov/" target="_blank" rel="noopener">USGS Gazetteer of Planetary Nomenclature</a> (Shackleton, de Gerlache, Haworth).</li>
+      <li><b>Fonts:</b> <a href="https://fonts.google.com/specimen/Barlow" target="_blank" rel="noopener">Barlow</a> and <a href="https://fonts.google.com/specimen/Barlow+Condensed" target="_blank" rel="noopener">Barlow Condensed</a> via Google Fonts (SIL Open Font License).</li>
+      <li><b>Hosting:</b> GitHub Pages.</li>
+      <li><b>Use of AI:</b> page code was drafted with an AI assistant (Claude, Anthropic) and reviewed by the team.</li>
+    </ul>
+    <p class="about-note">Sun disk visibility, planning margins and best-pick rankings are screening aids computed by this page, not official NASA ratings. Full list of resources: <a href="https://github.com/EngHlaa46/lunar-landing-site-navigator/blob/main/RESOURCES.md" target="_blank" rel="noopener">RESOURCES.md</a>.</p>
+  </section>
+
   <footer>
     <div id="srcNote"></div>
     <div>Crater names, centres and diameters: USGS Gazetteer of Planetary Nomenclature. Terrain and site positions: real LRO LOLA polar DEM data (NASA PGDA, Barker et al. 2023). <span id="ephFoot"></span></div>
@@ -528,6 +551,8 @@ section[id]{scroll-margin-top:90px}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>
 "use strict";
+/* Mission Logic: ephemeris + terrain horizon model and per-site statistics.
+   Loaded before app.js; app.js owns the UI state object S used by applyMargins() and stats(). */
 /* ---------- ephemeris + horizon model ----------
    One function, computeSite(), turns an ephemeris (Sun and Earth sub-points on the Moon) plus a terrain
    horizon into per-time-step positions. Named sites, the built-in demo and custom coordinates all use it. */
@@ -577,6 +602,7 @@ function normalizeEphemeris(e){
   return Object.assign(e, {n, times, source:e.source || "ephemeris.json"});
 }
 function normalizeHorizon(h, source){
+  // data contract: horizon_<id>.json is {site_id, source, horizon_mask:{az_step_deg, elevation_deg}}
   if (h && h.horizon_mask) h = {...h.horizon_mask, source: h.source};
   if (Array.isArray(h)) h = {elevation_deg:h};
   let el = h.elevation_deg || h.horizon_el_deg;
@@ -585,76 +611,7 @@ function normalizeHorizon(h, source){
   return {az_step_deg:h.az_step_deg || 360/el.length, elevation_deg:el, source:h.source || source};
 }
 
-/* ---------- built-in demo (synthetic, mirrors generate_mock_data.py) ---------- */
-const DEMO_START = Date.UTC(2026, 11, 1), DEMO_DAYS = 365, DEMO_STEP_MIN = 60;
-const DEMO_SITES = [
-  {site_id:"shackleton_rim", name:"Shackleton rim (demo)",  lat:-89.79, lon:-140.0, elevation_m:1900, group:"Team pick", base:0.55, terms:[[1,.9,2.4],[2,.5,.8],[5,.3,1.9],[9,.2,.4]]},
-  {site_id:"de_gerlache_rim",name:"de Gerlache rim (demo)", lat:-88.70, lon:-68.0,  elevation_m:1500, group:"Team pick", base:0.6,  terms:[[1,.9,1.1],[3,.6,2.9],[6,.35,.2],[10,.2,1.3]]},
-  {site_id:"malapert_massif",name:"Malapert massif (demo)", lat:-86.00, lon:2.90,   elevation_m:4900, group:"Team pick", base:-1.6, terms:[[1,.6,.5],[2,.45,2.2],[4,.3,1.0],[8,.2,2.7]]},
-  {site_id:"haworth_rim",    name:"Haworth rim (demo)",     lat:-86.38, lon:-2.10,  elevation_m:820,  group:"Team pick", base:0.2,  terms:[[1,.9,.3],[2,.7,1.9],[5,.4,.7],[9,.25,2.6]]}
-];
-function demoEphemeris(){
-  const n = DEMO_DAYS*24*60/DEMO_STEP_MIN, e = {start_utc:new Date(DEMO_START).toISOString(), step_minutes:DEMO_STEP_MIN, source:"MOCK - synthetic demo data, not NASA data",
-    sun_sublat:[], sun_sublon:[], earth_sublat:[], earth_sublon:[], earth_dist_km:[]};
-  for (let i = 0; i < n; i++){ const t = i*DEMO_STEP_MIN/1440;
-    e.sun_sublat.push(1.54*Math.sin(2*Math.PI*t/346.62 - 2.1));
-    e.sun_sublon.push(-deg(2*Math.PI*t/29.530589 + 1.3));
-    e.earth_sublat.push(6.68*Math.sin(2*Math.PI*t/27.21222 + 0.4));
-    e.earth_sublon.push(7.90*Math.sin(2*Math.PI*t/27.55455 + 2.1));
-    e.earth_dist_km.push(385000 + 21000*Math.cos(2*Math.PI*t/27.55455)); }
-  return normalizeEphemeris(e);
-}
-function demoHorizon(d){ const el = [];
-  for (let a = 0; a < 360; a += 2) el.push(r2(d.base + d.terms.reduce((s, [k, amp, ph]) => s + amp*Math.sin(k*rad(a) + ph), 0)));
-  return {az_step_deg:2, elevation_deg:el, source:"MOCK synthetic horizon"}; }
-// coarse demo terrain for custom points: smooth pseudo-random horizon seeded by position
-function demoGridHorizon(lat, lon){ const sd = Math.abs(Math.round(lat*97 + lon*13)) + 1, r = rng(sd);
-  return demoHorizon({base:(r() - .5)*2, terms:[[1, .4 + r()*.6, r()*6],[2, .2 + r()*.5, r()*6],[5, .1 + r()*.3, r()*6]]}); }
-
-/* ---------- state ---------- */
-const S = { periodH:708.73, p0:0, eph:null, grid:null, demo:false, custom:0, frame:0, basemap:null, sites:[], sel:0, i:0, days:7, mSun:0, mEarth:0, mode:"sites", slots:[0,0,0], playing:null, stepH:1, times:[], top:10, bot:-1.5, maskMax:3 };
-const $ = id => document.getElementById(id);
-const fmtT = ms => new Date(ms).toISOString().slice(0,16).replace("T"," ") + " UTC";
-const sgn = x => (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(1) + "°";
-const short = n => n.replace(/\s*\(demo\)$/g, "");
-const isMock = src => /mock/i.test(src || "");  // one MOCK test for the data chip, ephemeris notes and custom locations
-function rng(seed){ return () => (seed = (seed*16807) % 2147483647) / 2147483647; }
-
-async function getJSON(f){ const r = await fetch("data/" + f, {cache:"no-store"}); if (!r.ok) throw new Error(f + " " + r.status); return r.json(); }
-// sites.json may be: a list of file names (precomputed per-site files), {sites:[file names]},
-// a plain list of site objects, or {region, basemap, ephemeris, horizon_grid, sites:[site objects]}
-async function loadData(){
-  let idx;
-  try{ idx = await getJSON("sites.json"); }catch(e){ return demoData(); }
-  const meta = Array.isArray(idx) ? {} : idx, list = Array.isArray(idx) ? idx : idx.sites;
-  if (typeof list[0] === "string"){
-    const sites = await Promise.all(list.map(getJSON));
-    return {sites:sites.map(normalizeSite), from:"files", region:meta.region, basemap:meta.basemap, eph:null};
-  }
-  const eph = normalizeEphemeris(await getJSON(meta.ephemeris || "ephemeris.json"));
-  let grid = null; try{ grid = await getJSON(meta.horizon_grid || "horizon_grid.json"); }catch(e){}
-  const sites = await Promise.all(list.map(async d => {
-    const def = {site_id:d.id || d.site_id, name:d.name, lat:d.lat, lon:d.lon, elevation_m:d.elevation_m, group:d.group};
-    const hz = typeof d.horizon === "string" ? normalizeHorizon(await getJSON(d.horizon), d.horizon)
-             : normalizeHorizon(d.horizon || d.horizon_el_deg || d.horizon_mask, "inline horizon");
-    return computeSite(def, hz, eph);
-  }));
-  return {sites, from:"files", region:meta.region, basemap:meta.basemap, eph, grid};
-}
-function demoData(){
-  const eph = demoEphemeris();
-  return {sites:DEMO_SITES.map(d => computeSite(d, demoHorizon(d), eph)), from:"builtin", region:"Lunar south pole", eph, grid:null, demo:true};
-}
-function normalizeSite(st){
-  if (!st.horizon_mask && Array.isArray(st.horizon_el_deg)) st.horizon_mask = {az_step_deg:360/st.horizon_el_deg.length, elevation_deg:st.horizon_el_deg};
-  if (st.horizon_mask && !st.horizon_mask.az_step_deg) st.horizon_mask.az_step_deg = 360/st.horizon_mask.elevation_deg.length;
-  st.group = st.group || "Team pick";
-  return st;
-}
-const site = () => S.sites[S.sel];
-const N = () => site().samples.length;
-function windowStart(n = N()){ return Math.max(0, Math.min(S.i, n - winLen())); }
-function windowRange(){ const n = N(), a = windowStart(n); return [a, Math.min(n, a + winLen())]; }
+/* ---------- statistics ---------- */
 function longestRun(arr, a, b, key){ let best = 0, cur = 0; for (let k = a; k < b; k++){ if (arr[k][key]){ cur++; if (cur > best) best = cur; } else cur = 0; } return best; }
 function applyMargins(){
   // the UI derives visibility from elevations so every site is judged the same way
@@ -672,6 +629,50 @@ function stats(s, a0){
     runBoth:longestRun(s.samples, a, b, "_bo")*S.stepH, a, b,
     now:s.samples[Math.min(S.i, s.samples.length-1)] };
 }
+</script>
+<script>
+"use strict";
+/* UI: state, rendering and interaction. Depends on js/model.js. */
+/* ---------- state ---------- */
+const S = { periodH:708.73, p0:0, eph:null, grid:null, demo:false, custom:0, frame:0, basemap:null, sites:[], sel:0, i:0, days:7, mSun:0, mEarth:0, mode:"sites", slots:[0,0,0], playing:null, stepH:1, times:[], top:10, bot:-1.5, maskMax:3 };
+const $ = id => document.getElementById(id);
+const fmtT = ms => new Date(ms).toISOString().slice(0,16).replace("T"," ") + " UTC";
+const sgn = x => (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(1) + "°";
+const short = n => n.replace(/\s*\(demo\)$/g, "");
+const isMock = src => /mock/i.test(src || "");  // one MOCK test for the data chip, ephemeris notes and custom locations
+function rng(seed){ return () => (seed = (seed*16807) % 2147483647) / 2147483647; }
+
+async function getJSON(f){ const r = await fetch("data/" + f, {cache:"no-store"}); if (!r.ok) throw new Error(f + " " + r.status); return r.json(); }
+// sites.json may be: a list of file names (precomputed per-site files), {sites:[file names]},
+// a plain list of site objects, or {region, basemap, ephemeris, horizon_grid, sites:[site objects]}
+async function loadData(){
+  let idx;
+  idx = await getJSON("sites.json");
+  const meta = Array.isArray(idx) ? {} : idx, list = Array.isArray(idx) ? idx : idx.sites;
+  if (typeof list[0] === "string"){
+    const sites = await Promise.all(list.map(getJSON));
+    return {sites:sites.map(normalizeSite), from:"files", region:meta.region, basemap:meta.basemap, eph:null};
+  }
+  const eph = normalizeEphemeris(await getJSON(meta.ephemeris || "ephemeris.json"));
+  let grid = null; try{ grid = await getJSON(meta.horizon_grid || "horizon_grid.json"); }catch(e){}
+  const sites = await Promise.all(list.map(async d => {
+    const def = {site_id:d.id || d.site_id, name:d.name, lat:d.lat, lon:d.lon, elevation_m:d.elevation_m, group:d.group};
+    const hz = typeof d.horizon === "string" ? normalizeHorizon(await getJSON(d.horizon), d.horizon)
+             : normalizeHorizon(d.horizon || d.horizon_el_deg || d.horizon_mask, "inline horizon");
+    return computeSite(def, hz, eph);
+  }));
+  return {sites, from:"files", region:meta.region, basemap:meta.basemap, eph, grid};
+}
+function normalizeSite(st){
+  if (!st.horizon_mask && Array.isArray(st.horizon_el_deg)) st.horizon_mask = {az_step_deg:360/st.horizon_el_deg.length, elevation_deg:st.horizon_el_deg};
+  if (st.horizon_mask && !st.horizon_mask.az_step_deg) st.horizon_mask.az_step_deg = 360/st.horizon_mask.elevation_deg.length;
+  st.group = st.group || "Team pick";
+  return st;
+}
+const site = () => S.sites[S.sel];
+const N = () => site().samples.length;
+function windowStart(n = N()){ return Math.max(0, Math.min(S.i, n - winLen())); }
+function windowRange(){ const n = N(), a = windowStart(n); return [a, Math.min(n, a + winLen())]; }
 
 /* ---------- starfield background ---------- */
 function drawStars(){
@@ -816,7 +817,8 @@ function homeView(){
   const pts = S.sites.map(st => P(st.lat, st.lon)).concat([[0, 0]]), st = $("mapStage");
   let x0 = Math.min(...pts.map(p => p[0])), x1 = Math.max(...pts.map(p => p[0])), y0 = Math.min(...pts.map(p => p[1])), y1 = Math.max(...pts.map(p => p[1]));
   const pad = Math.max(.9, .25*Math.max(x1 - x0, y1 - y0)); x0 -= pad; x1 += pad; y0 -= pad; y1 += pad;
-  const asp = st.clientWidth/Math.max(1, st.clientHeight); let w = x1 - x0, h = y1 - y0;
+  // a page loaded in a background tab can report a 0-size stage; fall back to the CSS aspect ratio
+  const asp = st.clientWidth > 0 && st.clientHeight > 0 ? st.clientWidth/st.clientHeight : 4/3; let w = x1 - x0, h = y1 - y0;
   if (w/h < asp){ const nw = h*asp; x0 -= (nw - w)/2; w = nw; } else { const nh = w/asp; y0 -= (nh - h)/2; h = nh; }
   return {x:x0, y:y0, w, h};
 }
@@ -850,8 +852,7 @@ function buildMap(){
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="url(#crRim)" stroke-width="${r*.08}"/>`; }).join("")}</g>
   <g id="mPsr">${bm && bm.psr_image && bm.extent_m
     ? `<image href="data/${bm.psr_image}" x="${U(bm.extent_m[0])}" y="${-U(bm.extent_m[3])}" width="${U(bm.extent_m[1] - bm.extent_m[0])}" height="${U(bm.extent_m[3] - bm.extent_m[2])}" preserveAspectRatio="none"/>`
-    : FEATURES.map(f => { const [cx, cy] = P(f.lat, f.lon), r = f.d_km/2/KM_PER_UNIT;
-      return `<ellipse cx="${cx}" cy="${cy}" rx="${r*.42}" ry="${r*.28}" fill="url(#psrG)"/><ellipse cx="${cx}" cy="${cy}" rx="${r*.2}" ry="${r*.11}" fill="#bff6ff" opacity=".5"/>`; }).join("")}</g>
+    : ""}</g>
   <g id="mDyn"></g>`;
   $("polar").innerHTML = g; M.built = true;
   M.home = homeView(); M.view = {...M.home}; $("polar").setAttribute("viewBox", `${M.view.x} ${M.view.y} ${M.view.w} ${M.view.h}`);
@@ -967,8 +968,7 @@ function addCustom(lat, lon){
     S.grid.points.forEach(g => { const [x1, y1] = P(g.lat, g.lon), d = Math.hypot(x1 - x0, y1 - y0); if (d < bd){ bd = d; best = g; } });
     hz = normalizeHorizon(best.horizon_el_deg || best.elevation_deg || best.horizon, S.grid.source ? `coarse grid: ${S.grid.source}` : "coarse grid");
     note = `nearest grid point ${(bd*KM_PER_UNIT).toFixed(1)} km away${isMock(S.grid.source) ? ", MOCK grid" : ""}`;
-  } else if (S.demo){ hz = demoGridHorizon(lat, lon); note = "synthetic demo horizon"; }
-  else { hz = {az_step_deg:2, elevation_deg:new Array(180).fill(0), source:"flat horizon"}; note = "no terrain grid loaded, flat horizon assumed"; }
+  } else { hz = {az_step_deg:2, elevation_deg:new Array(180).fill(0), source:"flat horizon"}; note = "no terrain grid loaded, flat horizon assumed"; }
   S.custom++;
   const def = {site_id:"custom_" + S.custom, name:`Custom ${Math.abs(lat).toFixed(2)}° S, ${Math.abs(lon).toFixed(2)}° ${lon < 0 ? "W" : "E"}`,
     lat, lon, group:"Custom", terrain:"coarse", terrain_note:note};
@@ -1356,7 +1356,7 @@ function bindExtras(){
   const links = [...document.querySelectorAll(".dock-links a")];
   const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) links.forEach(a => a.classList.toggle("on", a.dataset.sec === en.target.id)); }),
     {rootMargin:"-45% 0px -50% 0px"});
-  ["horizon","map","status","compare"].forEach(id => io.observe($(id)));
+  ["horizon","map","status","compare","about"].forEach(id => io.observe($(id)));
   if (new URLSearchParams(location.search).get("tour") === "1") setTimeout(tourOpen, 600);
 }
 
@@ -1369,8 +1369,18 @@ function computeScale(){
 }
 (async function init(){
   drawStars();
-  const data = await loadData(), {sites, from, region, basemap} = data;
-  S.eph = data.eph; S.grid = data.grid || null; S.demo = !!data.demo || /mock/i.test((data.eph && data.eph.source) || "");
+  let data;
+  try{ data = await loadData(); }
+  catch(e){
+    // no built-in fallback data: show the problem instead of inventing numbers
+    console.error(e);
+    $("srcText").textContent = "Not loaded";
+    $("srcNote").textContent = "Could not load the data files in docs/data/ (" + e.message + "). Open the page through a web server or GitHub Pages, not as a local file.";
+    $("srcNote").scrollIntoView();
+    return;
+  }
+  const {sites, region, basemap} = data;
+  S.eph = data.eph; S.grid = data.grid || null; S.demo = /mock/i.test((data.eph && data.eph.source) || "");
   if (!S.eph){ $("cNote").textContent = "Custom locations need ephemeris.json in the data folder."; $("cGo").disabled = true; $("cPick").disabled = true; }
   else if (!S.grid && !S.demo) $("cNote").textContent = "No horizon_grid.json loaded, so custom points assume a flat horizon.";
   if (region) $("regionLabel").textContent = region + " candidate landing sites";
@@ -1384,11 +1394,15 @@ function computeScale(){
   $("srcText").textContent = mock ? "DEMO, not NASA" : "Team pipeline";
   $("srcChip").classList.toggle("demo", mock); $("srcChip").classList.toggle("real", !mock);
   $("srcNote").textContent = mock
-    ? `Showing synthetic demo data (${from === "files" ? "loaded from data/ files" : "built into the page"}). It imitates south-pole behaviour but must be replaced with JPL Horizons and LOLA results before submission.`
+    ? "MOCK DATA: the files in docs/data/ are synthetic placeholders, not NASA data. They imitate south-pole behaviour and will be replaced with JPL Horizons and LOLA results."
     : `Data source: ${sites.map(s => s.data_source).filter((v, i, a) => a.indexOf(v) === i).join("; ")}.`;
   const ephMock = S.eph ? isMock(S.eph.source) : mock;
   $("mapEph").textContent = ephMock ? "The ephemeris is still MOCK until the real file lands." : "Sun and Earth positions: JPL Horizons ephemeris.";
   $("ephFoot").textContent = ephMock ? "Ephemeris: still MOCK until the real JPL Horizons file lands." : "Ephemeris: JPL Horizons (NASA/JPL Solar System Dynamics Group).";
+  $("aboutStatus").textContent = $("srcNote").textContent;
+  $("aboutStatus").classList.toggle("mock", mock);
+  // the shadowed-area layer needs psr_image from the Terrain data; hide the toggle until it exists
+  if (!(basemap && basemap.psr_image)) document.querySelector('[data-layer="psr"]').hidden = true;
   $("dt").min = S.times[0].slice(0,16); $("dt").max = S.times[S.times.length - 1].slice(0,16);
   computeScale();
   document.querySelector(".scene").classList.add("intro");
